@@ -865,25 +865,6 @@ export component TerminalView inherits Rectangle {
                             }
                         }
 
-                        // Drag-selection highlights (under the text, blue tint).
-                        for s in root.selection : Rectangle {
-                            x: s.col * root.cell-w;
-                            y: s.row * root.cell-h;
-                            width: s.len * root.cell-w;
-                            height: root.cell-h;
-                            background: Theme.accent.with-alpha(0.40);
-                        }
-
-                        // Search-match highlights (behind the text).
-                        for m in root.find-matches : Rectangle {
-                            x: m.col * root.cell-w;
-                            y: m.row * root.cell-h;
-                            width: m.len * root.cell-w;
-                            height: root.cell-h;
-                            background: Theme.warning.with-alpha(0.45);
-                            border-radius: 2px;
-                        }
-
                         // Each span = a background fill (transparent for the
                         // default bg) with its text on top.  Wrapping the Text in
                         // the bg Rectangle keeps one element per span and renders
@@ -920,6 +901,35 @@ export component TerminalView inherits Rectangle {
                                 source: span.emoji-image;
                                 image-fit: contain;
                             }
+                        }
+
+                        // Drag-selection and search-match highlights are drawn
+                        // ABOVE the span backgrounds on purpose.  A non-default
+                        // cell background renders as an opaque Rectangle (see
+                        // vt_bg_to_slint in terminal/impls/presentation.rs), and
+                        // those span Rectangles come after the text, so tints
+                        // painted underneath them were completely invisible in
+                        // every full-screen TUI that paints a background on each
+                        // cell (opencode, lazygit, gitui, ...): the selection was
+                        // copied to the clipboard but the user saw no highlight.
+                        // Painting them last keeps the tint visible; at 0.40 /
+                        // 0.45 alpha the glyphs still show through, which is how
+                        // xterm / Windows Terminal render selection as well.
+                        for s in root.selection : Rectangle {
+                            x: s.col * root.cell-w;
+                            y: s.row * root.cell-h;
+                            width: s.len * root.cell-w;
+                            height: root.cell-h;
+                            background: Theme.accent.with-alpha(0.40);
+                        }
+
+                        for m in root.find-matches : Rectangle {
+                            x: m.col * root.cell-w;
+                            y: m.row * root.cell-h;
+                            width: m.len * root.cell-w;
+                            height: root.cell-h;
+                            background: Theme.warning.with-alpha(0.45);
+                            border-radius: 2px;
                         }
 
                         // Blinking cursor (overlay, decoupled from text). Its
